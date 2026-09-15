@@ -592,9 +592,14 @@ describe("setupEnsembleBlocks", () => {
         const blk = 50;
 
         beforeEach(() => {
-            turtleElapsedNotesBlock = createdBlocks["turtlelapsednotes"];
+            turtleElapsedNotesBlock = createdBlocks["turtleelapsednotes"];
             activity.blocks.blockList[blk] = { connections: [null, 100] };
             activity.blocks.blockList[100] = { name: "text", value: "Yertle" };
+        });
+
+        it("should register under 'turtleelapsednotes' without typo", () => {
+            expect(createdBlocks["turtleelapsednotes"]).toBeDefined();
+            expect(createdBlocks["turtlelapsednotes"]).toBeUndefined();
         });
 
         it("should return elapsed notes ratio for target turtle", () => {
