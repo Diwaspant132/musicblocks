@@ -74,6 +74,8 @@ body:not(.dark):not(.highcontrast) #helpfulSearchDiv {
     color: var(--color-text-primary);
     padding: 24px;
     width: 400px;
+    max-width: calc(100vw - 32px);
+    box-sizing: border-box;
     border-radius: 8px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
 }
@@ -82,13 +84,30 @@ body:not(.dark):not(.highcontrast) #helpfulSearchDiv {
     #newdropdown {
         position: fixed !important;
         left: 50% !important;
-        transform: translateX(-50%);
-        max-width: calc(100vw - 32px);
+        transform: translateX(-50%) !important;
+        width: calc(100vw - 32px) !important;
+        max-width: 400px !important;
         box-sizing: border-box;
+        padding: 20px 16px !important;
+        margin: 0 !important;
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
     }
 
     #confirmation-message {
         white-space: normal;
+        overflow-wrap: break-word;
+    }
+
+    #newdropdown .button-row {
+        gap: 12px;
+    }
+
+    #newdropdown .button-row .confirm-button,
+    #newdropdown .button-row .cancel-button {
+        min-width: 100px;
+        text-align: center;
+        box-sizing: border-box;
     }
 }
 
@@ -110,6 +129,7 @@ body:not(.dark):not(.highcontrast) #helpfulSearchDiv {
     align-items: center;
     width: 100%;
     margin-top: 16px;
+    flex-wrap: wrap;
 }
 
 .new-project-title {

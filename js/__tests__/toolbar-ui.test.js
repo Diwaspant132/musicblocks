@@ -234,6 +234,73 @@ describe("ToolbarUI - Visual Helpers", () => {
         expect(modalContainer.getAttribute("aria-label")).toBe("New project confirmation");
         expect(modalContainer.style.display).toBe("flex");
     });
+
+    test("renderNewProjectIcon sets up accessible buttons inside button-row and handles cancel/confirm", () => {
+        delete global.document.getElementById;
+
+        document.body.innerHTML =
+            '<div id="modal-container" style="display: none;"></div>' +
+            '<ul id="newdropdown"></ul>';
+
+        global._ = jest.fn(x => x);
+        const onConfirmMock = jest.fn();
+
+        toolbar.renderNewProjectIcon(onConfirmMock);
+
+        const newDropdown = document.getElementById("newdropdown");
+        const buttonRow = newDropdown.querySelector(".button-row");
+        expect(buttonRow).not.toBeNull();
+
+        const confirmBtn = buttonRow.querySelector(".confirm-button#new-project");
+        const cancelBtn = buttonRow.querySelector(".cancel-button#cancel-project");
+        expect(confirmBtn).not.toBeNull();
+        expect(cancelBtn).not.toBeNull();
+        expect(confirmBtn.textContent).toBe("Confirm");
+        expect(cancelBtn.textContent).toBe("Cancel");
+        expect(confirmBtn.getAttribute("role")).toBe("button");
+        expect(cancelBtn.getAttribute("role")).toBe("button");
+
+        const modalContainer = document.getElementById("modal-container");
+        expect(modalContainer.style.display).toBe("flex");
+
+        // Cancel closes the dialog
+        cancelBtn.onclick();
+        expect(modalContainer.style.display).toBe("none");
+        expect(onConfirmMock).not.toHaveBeenCalled();
+
+        // Reopen and Confirm executes callback and closes dialog
+        toolbar.renderNewProjectIcon(onConfirmMock);
+        expect(modalContainer.style.display).toBe("flex");
+        const newConfirmBtn = document.getElementById("new-project");
+        newConfirmBtn.onclick();
+        expect(modalContainer.style.display).toBe("none");
+        expect(onConfirmMock).toHaveBeenCalledTimes(1);
+    });
+
+    test("activities.css defines responsive and wrapping rules for new project modal", () => {
+        const fs = require("fs");
+        const path = require("path");
+        const activitiesCss = fs.readFileSync(
+            path.join(__dirname, "..", "..", "css", "activities.css"),
+            "utf8"
+        );
+
+        // Responsive media query for screens <= 600px
+        expect(activitiesCss).toMatch(/@media\s*\(max-width:\s*600px\)/);
+        expect(activitiesCss).toMatch(/#newdropdown\s*\{[^}]*position:\s*fixed\s*!important/);
+        expect(activitiesCss).toMatch(
+            /#newdropdown\s*\{[^}]*transform:\s*translateX\(-50%\)\s*!important/
+        );
+        expect(activitiesCss).toMatch(
+            /#newdropdown\s*\{[^}]*width:\s*calc\(100vw\s*-\s*32px\)\s*!important/
+        );
+        expect(activitiesCss).toMatch(/#newdropdown\s*\{[^}]*box-sizing:\s*border-box/);
+
+        // Button row wraps so buttons don't clip on narrow screens
+        expect(activitiesCss).toMatch(/#newdropdown\s+\.button-row\s*\{[^}]*flex-wrap:\s*wrap/);
+        // Confirmation message wraps breaking long words if necessary
+        expect(activitiesCss).toMatch(/#confirmation-message\s*\{[^}]*overflow-wrap:\s*break-word/);
+    });
 });
 
 describe("FocusCycleManager - dispose", () => {
