@@ -218,13 +218,13 @@ class ModeWidget {
 
         if (TEMPERAMENT[this.logo.synth.inTemperament]?.isEDO === false) {
             // Non-EDO temperaments are used by their pitch count (12/19/21);
-            // switching the tuning below will replace them with an equal
+            // switching the preview tuning below will replace them with an equal
             // temperament. Inform, but do not block.
             this._setTimeout(
                 () =>
                     this.textMsg(
                         _(
-                            "Non-EDO temperament: modes use its pitch count; switching the tuning replaces the temperament."
+                            "Non-EDO temperament: modes use its pitch count; switching the preview tuning replaces the temperament."
                         ),
                         4000
                     ),
@@ -409,7 +409,10 @@ class ModeWidget {
             }
 
             if (!isEquallyTempered(this._activeTemperamentKey)) {
-                this.textMsg(_("Switching tuning replaces the current non-EDO temperament."), 3000);
+                this.textMsg(
+                    _("Switching preview tuning replaces the current non-EDO temperament."),
+                    3000
+                );
             }
 
             this._closeModePiemenu();
@@ -422,7 +425,6 @@ class ModeWidget {
                 this._cacheState(oldEDO);
             }
 
-            this._syncSynthTemperament(key);
             this._activeTemperamentKey = key;
 
             // _translateNotesToEDO() and _restoreState() must run while
@@ -444,8 +446,8 @@ class ModeWidget {
             this.textMsg(
                 _(
                     isEquallyTempered(key)
-                        ? `Switched to ${newEDO}-EDO tuning.`
-                        : `Switched to ${tName}.`
+                        ? `Previewing in ${newEDO}-EDO tuning.`
+                        : `Previewing in ${tName}.`
                 ),
                 3000
             );
@@ -502,19 +504,10 @@ class ModeWidget {
         // intonation, meantone, ...) keep their own key even though their
         // pitch count collides with an equal EDO.
         if (isEquallyTempered(this._activeTemperamentKey)) {
-            this._syncSynthTemperament(this._temperamentKeyForEDO(edoCount));
+            this._activeTemperamentKey = this._temperamentKeyForEDO(edoCount);
         }
         this._rebuildModeIndex();
         this._piemenuMode();
-    }
-
-    _syncSynthTemperament(key) {
-        if (this.logo && this.logo.synth) {
-            this.logo.synth.inTemperament = key;
-            if (typeof this.logo.synth.temperamentChanged === "function") {
-                this.logo.synth.temperamentChanged(key, this.logo.synth.startingPitch);
-            }
-        }
     }
 
     _clearPieMenu() {
@@ -709,7 +702,7 @@ class ModeWidget {
 
         // EDO/Tuning — transparent select overlay on top of the icon.
         // The select is full-size but invisible; it IS the click target.
-        const tuningIcon = iconButton("menu-button.svg", _("temperament"), null);
+        const tuningIcon = iconButton("menu-button.svg", _("Preview tuning"), null);
         // Transparent select overlay — IS the click target; the icon behind
         // it is purely decorative.
         const edoSelect = document.createElement("select");
@@ -717,8 +710,8 @@ class ModeWidget {
         this._edoSelect = edoSelect;
         this._initEdoSelect(edoSelect);
         this._wireEdoSelect(edoSelect);
-        edoSelect.title = _("temperament");
-        edoSelect.setAttribute("aria-label", _("temperament"));
+        edoSelect.title = _("Preview tuning");
+        edoSelect.setAttribute("aria-label", _("Preview tuning"));
         Object.assign(edoSelect.style, {
             position: "absolute",
             top: 0,
@@ -1217,7 +1210,10 @@ class ModeWidget {
             return;
         }
 
-        if (edo === 12) {
+        if (
+            edo === 12 &&
+            (!this.logo?.synth?.inTemperament || isEquallyTempered(this.logo.synth.inTemperament))
+        ) {
             const noteToPlay = getNote(this._pitch, 4, note, ks, false, null, this.errorMsg);
             this.logo.synth.trigger(
                 0,
@@ -1609,7 +1605,6 @@ class ModeWidget {
     _applyImportedMode(foundEdo, foundPattern, name) {
         const key = this._temperamentKeyForEDO(foundEdo);
         this._cacheState(this._activeEDO);
-        this._syncSynthTemperament(key);
         this._activeTemperamentKey = key;
         this._rebuildWheel(foundEdo);
         this._applyModePattern(foundPattern);

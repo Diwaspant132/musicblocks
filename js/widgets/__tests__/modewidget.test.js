@@ -1446,93 +1446,16 @@ describe("ModeWidget", () => {
         });
     });
 
-    describe("synthesizer temperament synchronization", () => {
-        test("_syncSynthTemperament updates inTemperament and notifies synth.temperamentChanged", () => {
-            modeWidget._syncSynthTemperament("equal19");
-
-            expect(mockActivity.logo.synth.inTemperament).toBe("equal19");
-            expect(mockActivity.logo.synth.temperamentChanged).toHaveBeenCalledWith(
-                "equal19",
-                "C4"
-            );
-        });
-
-        test("_syncSynthTemperament safely handles missing logo, synth, or temperamentChanged", () => {
-            modeWidget.logo = null;
-            expect(() => modeWidget._syncSynthTemperament("equal")).not.toThrow();
-
-            modeWidget.logo = {};
-            expect(() => modeWidget._syncSynthTemperament("equal")).not.toThrow();
-
-            modeWidget.logo = { synth: {} };
-            expect(() => modeWidget._syncSynthTemperament("equal")).not.toThrow();
-            expect(modeWidget.logo.synth.inTemperament).toBe("equal");
-        });
-
-        test("_rebuildWheel synchronizes synth temperament for equally tempered tunings", () => {
-            jest.spyOn(modeWidget, "_piemenuMode").mockImplementation(() => {});
-            jest.spyOn(modeWidget, "_rebuildModeIndex").mockImplementation(() => {});
-
-            modeWidget._activeTemperamentKey = "equal";
-            modeWidget._rebuildWheel(19);
-
-            expect(mockActivity.logo.synth.inTemperament).toBe("equal19");
-            expect(mockActivity.logo.synth.temperamentChanged).toHaveBeenCalledWith(
-                "equal19",
-                "C4"
-            );
-        });
-
-        test("_applyImportedMode synchronizes synth temperament with imported mode EDO", () => {
-            jest.spyOn(modeWidget, "_rebuildWheel").mockImplementation(() => {});
-            jest.spyOn(modeWidget, "_applyModePattern").mockImplementation(() => {});
-            jest.spyOn(modeWidget, "_updateModeDisplay").mockImplementation(() => {});
-
-            modeWidget._applyImportedMode(31, [3, 4, 2, 3, 4, 3, 3], "imported-31");
-
-            expect(mockActivity.logo.synth.inTemperament).toBe("equal31");
-            expect(mockActivity.logo.synth.temperamentChanged).toHaveBeenCalledWith(
-                "equal31",
-                "C4"
-            );
-        });
-
-        test("switching from equal temperament to just intonation updates real synth frequency table", () => {
-            const realSynth = new Synth();
-            modeWidget.logo = { synth: realSynth };
-
-            // In Equal Temperament, E4 is calculated via 12-EDO (~329.63 Hz)
-            expect(realSynth.inTemperament).toBe("equal");
-            const equalFreq = realSynth.getFrequency("E4", false);
-            expect(equalFreq).toBeCloseTo(329.63, 1);
-
-            // Switching to Just Intonation via ModeWidget updates synth.inTemperament
-            // and calls temperamentChanged(), rebuilding synth.noteFrequencies
-            modeWidget._syncSynthTemperament("just intonation");
-
-            expect(realSynth.inTemperament).toBe("just intonation");
-            // In 5-limit Just Intonation with root C4, major third E4 has ratio 5/4.
-            // With A4 = 440 Hz, C4 = 264 Hz, giving E4 = 264 * 1.25 = 330.00 Hz.
-            const jiFreq = realSynth.getFrequency("E4", false);
-            expect(jiFreq).toBeCloseTo(330.0, 1);
-            expect(jiFreq).not.toBeCloseTo(equalFreq, 1);
-        });
-
-        test("_wireEdoSelect updates real synth frequency table when switching to just intonation", () => {
-            const realSynth = new Synth();
-            modeWidget.logo = { synth: realSynth };
+    describe("preview-only tuning behavior", () => {
+        test("_wireEdoSelect updates _activeTemperamentKey without altering logo.synth.inTemperament", () => {
+            mockActivity.logo.synth.inTemperament = "equal";
             modeWidget._activeTemperamentKey = "equal";
 
             jest.spyOn(modeWidget, "_closeModePiemenu").mockImplementation(() => {});
             jest.spyOn(modeWidget, "_rebuildWheel").mockImplementation(() => {});
 
-            // Equal temperament frequency for E4
-            const equalFreq = realSynth.getFrequency("E4", false);
-            expect(equalFreq).toBeCloseTo(329.63, 1);
-
-            // User selects "just intonation" in dropdown wired by _wireEdoSelect
             const mockSelect = {
-                value: "just intonation",
+                value: "equal19",
                 addEventListener: jest.fn()
             };
             modeWidget._wireEdoSelect(mockSelect);
@@ -1541,10 +1464,94 @@ describe("ModeWidget", () => {
             )[1];
             changeHandler();
 
-            expect(realSynth.inTemperament).toBe("just intonation");
+            expect(modeWidget._activeTemperamentKey).toBe("equal19");
+            expect(mockActivity.logo.synth.inTemperament).toBe("equal");
+            expect(mockActivity.logo.synth.temperamentChanged).not.toHaveBeenCalled();
+        });
+
+        test("_rebuildWheel updates _activeTemperamentKey without altering logo.synth.inTemperament", () => {
+            jest.spyOn(modeWidget, "_piemenuMode").mockImplementation(() => {});
+            jest.spyOn(modeWidget, "_rebuildModeIndex").mockImplementation(() => {});
+
+            mockActivity.logo.synth.inTemperament = "equal";
+            modeWidget._activeTemperamentKey = "equal";
+            modeWidget._rebuildWheel(19);
+
+            expect(modeWidget._activeTemperamentKey).toBe("equal19");
+            expect(mockActivity.logo.synth.inTemperament).toBe("equal");
+            expect(mockActivity.logo.synth.temperamentChanged).not.toHaveBeenCalled();
+        });
+
+        test("_applyImportedMode updates _activeTemperamentKey without altering logo.synth.inTemperament", () => {
+            jest.spyOn(modeWidget, "_rebuildWheel").mockImplementation(() => {});
+            jest.spyOn(modeWidget, "_applyModePattern").mockImplementation(() => {});
+            jest.spyOn(modeWidget, "_updateModeDisplay").mockImplementation(() => {});
+
+            mockActivity.logo.synth.inTemperament = "equal";
+            modeWidget._applyImportedMode(31, [3, 4, 2, 3, 4, 3, 3], "imported-31");
+
+            expect(modeWidget._activeTemperamentKey).toBe("equal31");
+            expect(mockActivity.logo.synth.inTemperament).toBe("equal");
+            expect(mockActivity.logo.synth.temperamentChanged).not.toHaveBeenCalled();
+        });
+
+        test("acceptance test: changing tuning in ModeWidget preserves Just Intonation frequency table", () => {
+            const realSynth = new Synth();
+            realSynth.inTemperament = "just intonation";
+            realSynth.temperamentChanged("just intonation", "C4");
+
+            // Verify JI non-equal frequency is constructed
             const jiFreq = realSynth.getFrequency("E4", false);
             expect(jiFreq).toBeCloseTo(330.0, 1);
-            expect(jiFreq).not.toBeCloseTo(equalFreq, 1);
+
+            modeWidget.logo = { synth: realSynth };
+            modeWidget._activeTemperamentKey = "just intonation";
+
+            jest.spyOn(modeWidget, "_closeModePiemenu").mockImplementation(() => {});
+            jest.spyOn(modeWidget, "_rebuildWheel").mockImplementation(() => {});
+
+            // User changes tuning dropdown to 12-EDO Equal in ModeWidget
+            const mockSelect = {
+                value: "equal",
+                addEventListener: jest.fn()
+            };
+            modeWidget._wireEdoSelect(mockSelect);
+            const changeHandler = mockSelect.addEventListener.mock.calls.find(
+                call => call[0] === "change"
+            )[1];
+            changeHandler();
+
+            // Preview key is updated for widget preview
+            expect(modeWidget._activeTemperamentKey).toBe("equal");
+
+            // Crucial: project synthesizer state and frequency table must remain intact!
+            expect(realSynth.inTemperament).toBe("just intonation");
+            expect(realSynth.getFrequency("E4", false)).toBeCloseTo(330.0, 1);
+
+            // Close ModeWidget and simulate running project again
+            modeWidget.widgetWindow.onclose();
+            expect(realSynth.inTemperament).toBe("just intonation");
+            expect(realSynth.getFrequency("E4", false)).toBeCloseTo(330.0, 1);
+        });
+
+        test("_triggerNote uses frequency calculation for preview without corrupting non-EDO project tuning", () => {
+            const realSynth = new Synth();
+            realSynth.inTemperament = "just intonation";
+            realSynth.temperamentChanged("just intonation", "C4");
+
+            modeWidget.logo = { synth: realSynth };
+            modeWidget._activeTemperamentKey = "equal";
+            modeWidget._pitch = "C";
+
+            const triggerSpy = jest.spyOn(realSynth, "trigger").mockImplementation(() => {});
+
+            // Trigger note in 12-EDO preview mode while project is in JI
+            modeWidget._triggerNote(4, 12);
+
+            expect(triggerSpy).toHaveBeenCalled();
+            const calledFreq = triggerSpy.mock.calls[0][1];
+            expect(typeof calledFreq).toBe("number");
+            expect(calledFreq).toBeCloseTo(329.63, 1);
         });
     });
 });
