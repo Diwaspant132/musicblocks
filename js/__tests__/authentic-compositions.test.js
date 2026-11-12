@@ -64,7 +64,8 @@ describe("Authentic Musical Compositions & Multi-Turtle Fixtures", () => {
 
     function calculateVoiceDuration(blocks, actionName) {
         const actionBlock = blocks.find(b => {
-            if (Array.isArray(b[1]) && b[1][0] === "action") {
+            const isAction = b[1] === "action" || (Array.isArray(b[1]) && b[1][0] === "action");
+            if (isAction) {
                 const textBlockId = b[4]?.[1];
                 const textBlock = blocks[textBlockId];
                 return (
@@ -88,7 +89,9 @@ describe("Authentic Musical Compositions & Multi-Turtle Fixtures", () => {
             if (!blk) {
                 break;
             }
-            if (Array.isArray(blk[1]) && blk[1][0] === "newnote") {
+            const isNewNote =
+                blk[1] === "newnote" || (Array.isArray(blk[1]) && blk[1][0] === "newnote");
+            if (isNewNote) {
                 const divId = blk[4]?.[1];
                 const div = blocks[divId];
                 const num = blocks[div[4][1]][1][1].value;
@@ -359,6 +362,130 @@ describe("Authentic Musical Compositions & Multi-Turtle Fixtures", () => {
             expect(melodyDuration).toBe(2);
             expect(arpDuration).toBe(2);
             expect(drumDuration).toBe(2);
+        });
+    });
+
+    describe("Harmonices Mundi (Kepler's Celestial Spirograph) Composition", () => {
+        const htmlPath = path.join(
+            projectRoot,
+            "examples",
+            "Harmonices-Mundi-Kepler-Spirograph.html"
+        );
+        const tbPath = path.join(
+            projectRoot,
+            "cypress",
+            "fixtures",
+            "harmonices-mundi-kepler-spirograph.tb"
+        );
+
+        it("contains valid standalone HTML example file matching the .tb fixture", () => {
+            expect(fs.existsSync(htmlPath)).toBe(true);
+            expect(fs.existsSync(tbPath)).toBe(true);
+
+            const htmlContent = fs.readFileSync(htmlPath, "utf8");
+            const tbContent = fs.readFileSync(tbPath, "utf8");
+
+            const extractedData = extractProjectDataFromHTML(htmlContent);
+            expect(extractedData).not.toBeNull();
+            expect(JSON.parse(extractedData)).toEqual(JSON.parse(tbContent));
+        });
+
+        it("maintains 100% reciprocal block graph connectivity across all nodes", () => {
+            const tbContent = fs.readFileSync(tbPath, "utf8");
+            const blocks = JSON.parse(tbContent);
+
+            const errors = validateBlockGraph(blocks);
+            expect(errors).toEqual([]);
+        });
+
+        it("defines four distinct turtles for Venus, Earth, Mars/Jupiter, and Saturn", () => {
+            const tbContent = fs.readFileSync(tbPath, "utf8");
+            const blocks = JSON.parse(tbContent);
+
+            const startBlocks = blocks.filter(b => Array.isArray(b[1]) && b[1][0] === "start");
+            expect(startBlocks).toHaveLength(4);
+
+            const turtleIds = startBlocks.map(b => b[1][1].id);
+            expect(turtleIds).toEqual([1600000000031, 1600000000032, 1600000000033, 1600000000034]);
+        });
+
+        it("configures all four authentic orchestral instruments (flute, guitar, clarinet, cello)", () => {
+            const tbContent = fs.readFileSync(tbPath, "utf8");
+            const blocks = JSON.parse(tbContent);
+
+            const voicenameBlocks = blocks.filter(
+                b => Array.isArray(b[1]) && b[1][0] === "voicename"
+            );
+            const voices = voicenameBlocks.map(b => b[1][1].value);
+
+            expect(voices).toContain("flute");
+            expect(voices).toContain("guitar");
+            expect(voices).toContain("clarinet");
+            expect(voices).toContain("cello");
+        });
+
+        it("implements event-driven architectural decoupling with everybeatdo", () => {
+            const tbContent = fs.readFileSync(tbPath, "utf8");
+            const blocks = JSON.parse(tbContent);
+
+            const everybeatBlock = blocks.find(
+                b => b[1] === "everybeatdo" || (Array.isArray(b[1]) && b[1][0] === "everybeatdo")
+            );
+            expect(everybeatBlock).toBeDefined();
+
+            const targetNameId = everybeatBlock[4][1];
+            const targetNameBlock = blocks[targetNameId];
+            expect(targetNameBlock[1][1].value).toBe("draw rose petal");
+        });
+
+        it("uses dynamic Box variable arithmetic for orbital rose color progression", () => {
+            const tbContent = fs.readFileSync(tbPath, "utf8");
+            const blocks = JSON.parse(tbContent);
+
+            // storein roseHue
+            const storeinBlocks = blocks.filter(
+                b => b[1] === "storein" || (Array.isArray(b[1]) && b[1][0] === "storein")
+            );
+            expect(storeinBlocks.length).toBeGreaterThanOrEqual(2);
+
+            const boxNames = storeinBlocks.map(sb => {
+                const nameId = sb[4][1];
+                return blocks[nameId][1][1].value;
+            });
+            expect(boxNames).toContain("roseHue");
+
+            // plus block for incrementing roseHue
+            const plusBlocks = blocks.filter(
+                b => b[1] === "plus" || (Array.isArray(b[1]) && b[1][0] === "plus")
+            );
+            expect(plusBlocks.length).toBeGreaterThanOrEqual(1);
+        });
+
+        it("correctly spells Kepler's Earth semitone as Ab in Measure 7", () => {
+            const tbContent = fs.readFileSync(tbPath, "utf8");
+            const blocks = JSON.parse(tbContent);
+
+            const notenameBlocks = blocks.filter(
+                b => Array.isArray(b[1]) && b[1][0] === "notename"
+            );
+            const notes = notenameBlocks.map(b => b[1][1].value);
+
+            expect(notes).toContain("Ab");
+        });
+
+        it("synchronizes all four voice durations to exactly 8.0 whole notes (32 beats)", () => {
+            const tbContent = fs.readFileSync(tbPath, "utf8");
+            const blocks = JSON.parse(tbContent);
+
+            const venusDuration = calculateVoiceDuration(blocks, "venus celestial melody");
+            const earthDuration = calculateVoiceDuration(blocks, "earth semitone chaconne");
+            const clarinetDuration = calculateVoiceDuration(blocks, "celestial arpeggios");
+            const celloDuration = calculateVoiceDuration(blocks, "saturn ground bass");
+
+            expect(venusDuration).toBe(8);
+            expect(earthDuration).toBe(8);
+            expect(clarinetDuration).toBe(8);
+            expect(celloDuration).toBe(8);
         });
     });
 });

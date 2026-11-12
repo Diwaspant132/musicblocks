@@ -429,6 +429,7 @@ Music Blocks has handy widgets for various musical concepts to create musical co
 | HyperScore-Tonal.html | Create music by painting patterns on the canvas |
 | 19-EDO-Microtonal-Counterpoint.html | Two-part polyphonic counterpoint in 19-EDO microtonal temperament (flute & cello), exploring pure 19-EDO major/minor thirds and fifths. |
 | 5-Limit-Just-Intonation-Polyrhythm.html | Three-turtle polyphonic composition combining 5-limit Just Intonation pure integer ratio harmonies (vibraphone & piano) with 3-against-2 metric subdivisions and acoustic percussion. |
+| Harmonices-Mundi-Kepler-Spirograph.html | A synchronized 4-turtle celestial masterwork based on Johannes Kepler's 1619 Harmonices Mundi. Features a soaring Flute soprano weaving the 5-petaled Rose of Venus spirograph in an 8:13 orbital resonance, an acoustic guitar voicing Kepler's famous Earth semitone chaconne (G4-Ab4-G4), clarinet arpeggios, and a solemn cello ground bass anchored to a radiant golden sun. |
 
 # Utilities
 
