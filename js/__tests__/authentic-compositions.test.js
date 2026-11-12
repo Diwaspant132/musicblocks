@@ -435,10 +435,10 @@ describe("Authentic Musical Compositions & Multi-Turtle Fixtures", () => {
 
             const targetNameId = everybeatBlock[4][1];
             const targetNameBlock = blocks[targetNameId];
-            expect(targetNameBlock[1][1].value).toBe("draw rose petal");
+            expect(targetNameBlock[1][1].value).toBe("draw harmonic wave");
         });
 
-        it("uses dynamic Box variable arithmetic for orbital rose color progression", () => {
+        it("uses dynamic Box variable arithmetic for orbital color progression", () => {
             const tbContent = fs.readFileSync(tbPath, "utf8");
             const blocks = JSON.parse(tbContent);
 
